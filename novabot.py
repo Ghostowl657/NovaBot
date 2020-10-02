@@ -109,7 +109,7 @@ async def close(ctx, arg):
                 council = ctx.guild.get_role(role.id)
             elif role.name == 'Guild Bank':
                 gbank = ctx.guild.get_role(role.id)
-        if council in ctx.author.roles or (gbank in ctx.author.roles and ctx.channel.category_id == bank_id):
+        if council in ctx.author.roles or (gbank in ctx.author.roles and ctx.channel.category_id == bank_cat.id):
             if arg is not None:
                 reason = arg
             else:
