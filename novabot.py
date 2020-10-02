@@ -127,9 +127,9 @@ async def createticketmessage(ctx):
     """Creates the support message on which users react to open tickets"""
     emojis = ['🆘', '🏦', '💰']
     support_channel_name = 'support'
-    for index, item in enumerate(ctx.guild.channels):
+    for index, item in enumerate(ctx.guild.text_channels):
         if item.name == support_channel_name:
-            ticket_channel = ctx.guild.channels[index]
+            ticket_channel = ctx.guild.text_channels[index]
             break
     ticket_message = f"This channel will be for support ticket creation, " \
                      f"react to the bot's message with a {emojis[1]} icon for guild bank requests, " \
