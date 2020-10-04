@@ -70,14 +70,19 @@ async def assign_role(bot, payload, action):
     guild = bot.get_guild(payload.guild_id)
     requester = guild.get_member(payload.user_id)
     request_channel = guild.get_channel(payload.channel_id)
-    role_dict = {}
     role_assign_msg = await request_channel.fetch_message(payload.message_id)
     removed_intro = role_assign_msg.content.split('React to give yourself a role.\n')[1][1:]
+    requested_role = None
     for sub_message in removed_intro.split('\n'):
-        if len(sub_message) > 0:
-            role_dict[int(sub_message.split(':')[2].replace('>',''))] = sub_message.split(' : ')[1].replace('`', '')
-    requested_role = discordget(guild.roles, name=role_dict[payload.emoji.id])
-    if action == 'add' and requested_role not in requester.roles:
+        temp_message = sub_message.split(' : ')
+        if len(temp_message) == 2:
+            if ':' in temp_message[0]:
+                reaction = discordget(guild.emojis, id=temp_message[0].split(':')[2].replace('>', ''))
+                if reaction == payload.emoji:
+                    requested_role = discordget(guild.roles, name=temp_message[1].replace('`', ''))
+            elif temp_message[0] == str(payload.emoji):
+                requested_role = discordget(guild.roles, name=temp_message[1].replace('`', ''))
+    if action == 'add' and requested_role not in requester.roles and requested_role is not None:
         await requester.add_roles(requested_role, reason="User requested")
         await requester.send(f"**{guild.name}**: {requested_role.name}: Gave you the role!")
     elif action == 'remove' and requested_role in requester.roles:
@@ -115,6 +120,29 @@ async def dkptable(bot, message):
     await msg.pin()
 
 
+async def votersuppression(bot, payload):
+    allowed_role_names = ["Galaxy Council"]
+    voting_channel = bot.get_channel(payload.channel_id)
+    guild = bot.get_guild(payload.guild_id)
+    allowed_roles = [discordget(guild.roles, name=allowed_role_name) for allowed_role_name in allowed_role_names]
+    for index, item in enumerate(allowed_role_names):
+        if index == 0:
+            pm_message = f"Sorry, {voting_channel.mention} is for votes from {item}"
+        elif index == len(allowed_role_names)-1:
+            pm_message += f", and {item}"
+        else:
+            pm_message += f", {item}"
+    pm_message += ' only.'
+    if any(role in allowed_roles for role in payload.member.roles):
+        return
+    else:
+        msg = await voting_channel.fetch_message(payload.message_id)
+        for react in msg.reactions:
+            if str(react.emoji) == str(payload.emoji):
+                await react.remove(bot.get_user(payload.user_id))
+        await payload.member.send(content=pm_message)
+
+
 @Bot.event
 async def on_member_join(member):
     contact = member.guild.get_member(adminIDs[0])
@@ -133,10 +161,13 @@ async def on_raw_reaction_add(payload):
     if payload.user_id != Bot.user.id:
         support_channel_name = "support"
         role_assign_channel_name = "role-assignment"
+        voting_channel_name = "council-votes"
         if Bot.get_channel(payload.channel_id).name == support_channel_name:
             await make_ticket(Bot, payload)
         elif Bot.get_channel(payload.channel_id).name == role_assign_channel_name:
             await assign_role(Bot, payload, 'add')
+        elif Bot.get_channel(payload.channel_id).name == voting_channel_name:
+            await votersuppression(Bot, payload)
 
 
 @Bot.event
