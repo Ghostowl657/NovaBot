@@ -77,8 +77,7 @@ async def assign_role(bot, payload, action):
         temp_message = sub_message.split(' : ')
         if len(temp_message) == 2:
             if ':' in temp_message[0]:
-                reaction = discordget(guild.emojis, id=temp_message[0].split(':')[2].replace('>', ''))
-                if reaction == payload.emoji:
+                if int(temp_message[0].split(':')[2].replace('>', '')) == payload.emoji.id:
                     requested_role = discordget(guild.roles, name=temp_message[1].replace('`', ''))
             elif temp_message[0] == str(payload.emoji):
                 requested_role = discordget(guild.roles, name=temp_message[1].replace('`', ''))
@@ -96,7 +95,7 @@ async def dkptable(bot, message):
     dkp_file = open(f'{team}_dkp.csv', 'w')
     new_table_file = open('new_table.csv', 'r')
     new_dkp_reader = csv.reader(new_table_file, delimiter=',')
-    dkp_file.write(f'the date,{date.today()}\n')
+    dkp_file.write(f'Current as of,{date.today()}\n')
     dkp_file.writelines([f'{line[0]},{line[2]}\n' for line in new_dkp_reader][1:])
     new_table_file.close()
     dkp_file.close()
@@ -105,9 +104,8 @@ async def dkptable(bot, message):
     text_table = '**DKP Table** ```'
     dkp_file = open(f'{team}_dkp.csv', 'r')
     for index, line in enumerate(dkp_file.readlines()):
-        if index > 0:
-            name, points = line.split(',')
-            text_table += f'{name}, {points}'
+        name, points = line.split(',')
+        text_table += f'{name}, {points}'
     text_table += '```'
 
     pins = await team_channel.pins()
@@ -182,10 +180,16 @@ async def on_raw_reaction_remove(payload):
 async def on_message(message):
     if message.author == Bot.user:
         return
-    dkp_archive_channel_name = "dkp-archive"
-    dkp_archive_channel = discordget(message.guild.text_channels, name=dkp_archive_channel_name)
-    if message.channel == dkp_archive_channel:
-        await dkptable(Bot, message)
+    if message.guild:
+        dkp_archive_channel_name = "dkp-archive"
+        dkp_archive_channel = discordget(message.guild.text_channels, name=dkp_archive_channel_name)
+        if message.channel == dkp_archive_channel:
+            await dkptable(Bot, message)
+        await Bot.process_commands(message)
+    else:
+        admin_user = Bot.get_user(adminIDs[0])
+        msg = f"from {message.author.mention}: {message.content}"
+        await admin_user.send(content=msg)
 
 
 @Bot.command()
