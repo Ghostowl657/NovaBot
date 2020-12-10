@@ -58,11 +58,11 @@ async def make_ticket(bot, payload):
         f.writelines(lines)
 
     ticketer = bot.get_user(payload.user_id)
-    pm_message = discord.Embed(description=f"{ticketer.mention} has opened a new ticket! "
-                                           f"{ticket_channel.mention}", color=discord.Color.blue())
+    #pm_message = discord.Embed(description=f"{ticketer.mention} has opened a new ticket! "
+    #                                       f"{ticket_channel.mention}", color=discord.Color.blue())
     seed_message = discord.Embed(description=f"Hello {ticketer.mention}, our staff will be with you shortly!",
                                  color=discord.Color.blue())
-    await ticketer.send(embed=pm_message)
+    #await ticketer.send(embed=pm_message)
     await ticket_channel.send(embed=seed_message)
 
 
@@ -149,7 +149,7 @@ async def on_member_join(member):
     greeting_channel = discordget(member.guild.text_channels, name=greeting_channel_name)
     welcome_info_page = discordget(member.guild.text_channels, name=welcome_info_page_name)
     intro_message = f"Welcome {member.mention}! Please change your discord name to match your main's name in game. " \
-                    f"If you are a guildee, PM your name to {contact.mention} on discord for guild permissions. " \
+                    f"If you are a guildee, PM {contact.mention} on discord for guild permissions. " \
                     f"Have a look at the {welcome_info_page.mention} for help with navigating the server!"
     await greeting_channel.send(content=intro_message)
 
