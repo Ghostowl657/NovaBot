@@ -24,9 +24,9 @@ async def make_ticket(bot, payload):
         lines = f.readlines()
         ticket_num = int(lines[2].strip())
 
-    support_category_names = ["Ideas and Concerns", "Guild Bank Requests", "DKP Questions", "Frost Resistance", "Frost Resistance 2"]
+    support_category_names = ["Ideas and Concerns", "Guild Bank Requests", "DKP Questions", "Frost Resistance"]
     officer_names = "Galaxy Council"
-    unique_role_names = {"Ideas and Concerns": None, "Guild Bank Requests": "Guild Bank", "DKP Questions": None, "Frost Resistance": None, "Frost Resistance 2": None}
+    unique_role_names = {"Ideas and Concerns": None, "Guild Bank Requests": "Guild Bank", "DKP Questions": None, "Frost Resistance": None}
 
     guild = bot.get_guild(payload.guild_id)
     moderator = discordget(guild.roles, name=officer_names)
