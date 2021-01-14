@@ -45,12 +45,18 @@ async def make_ticket(bot, payload):
                 unique_role = discordget(guild.roles, name=unique_role_names[support_category_names[index]])
                 overwrites[unique_role] = discord.PermissionOverwrite(read_messages=True)
             ticket_num += 1
-            try:
-                ticket_channel = await guild.create_text_channel(f'ticket-#{ticket_num}',
-                                                                 category=support_categories[index], overwrites=overwrites)
-            except discord.errors.HTTPException:
-                ticket_channel = await guild.create_text_channel(f'ticket-#{ticket_num}',
-                                                                 category=support_categories[index+1], overwrites=overwrites)
+
+            chosen_category = support_categories[index]
+            cycles = 1
+            while len(chosen_category.text_channels) == 50:
+                cycles += 1
+                if discordget(guild.categories, name=support_category_names[index] + f" {cycles}") is None:
+                    chosen_category = await guild.create_category(support_category_names[index] + f" {cycles}",
+                                                                  overwrites=overwrites,position=chosen_category.position)
+                else:
+                    chosen_category = discordget(guild.categories, name=support_category_names[index] + f" {cycles}")
+            ticket_channel = await guild.create_text_channel(f'ticket-#{ticket_num}',
+                                                             category=chosen_category, overwrites=overwrites)
             break
 
     for react in msg.reactions:
@@ -205,6 +211,9 @@ async def close(ctx):
     support_categories = [discordget(ctx.guild.categories, name=support_category_names[n])
                           for n in range(len(support_category_names))]
     ctx_category = discordget(ctx.guild.categories, id=ctx.channel.category_id)
+    for index, item in enumerate(support_categories):
+        if item.name in ctx_category.name:
+            ctx_category = support_categories[index]
     if ctx_category in support_categories:
         async for message in ctx.channel.history(oldest_first=True):
             embed = message.embeds[0]
