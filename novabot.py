@@ -24,9 +24,9 @@ async def make_ticket(bot, payload):
         lines = f.readlines()
         ticket_num = int(lines[2].strip())
 
-    support_category_names = ["Ideas and Concerns", "Guild Bank Requests", "DKP Questions"]
+    support_category_names = ["Ideas and Concerns", "Guild Bank Requests", "DKP Questions", "Frost Resistance", "Frost Resistance 2"]
     officer_names = "Galaxy Council"
-    unique_role_names = {"Ideas and Concerns": None, "Guild Bank Requests": "Guild Bank", "DKP Questions": None}
+    unique_role_names = {"Ideas and Concerns": None, "Guild Bank Requests": "Guild Bank", "DKP Questions": None, "Frost Resistance": None, "Frost Resistance 2": None}
 
     guild = bot.get_guild(payload.guild_id)
     moderator = discordget(guild.roles, name=officer_names)
@@ -45,8 +45,12 @@ async def make_ticket(bot, payload):
                 unique_role = discordget(guild.roles, name=unique_role_names[support_category_names[index]])
                 overwrites[unique_role] = discord.PermissionOverwrite(read_messages=True)
             ticket_num += 1
-            ticket_channel = await guild.create_text_channel(f'ticket-#{ticket_num}',
-                                                             category=support_categories[index], overwrites=overwrites)
+            try:
+                ticket_channel = await guild.create_text_channel(f'ticket-#{ticket_num}',
+                                                                 category=support_categories[index], overwrites=overwrites)
+            except discord.errors.HTTPException:
+                ticket_channel = await guild.create_text_channel(f'ticket-#{ticket_num}',
+                                                                 category=support_categories[index+1], overwrites=overwrites)
             break
 
     for react in msg.reactions:
@@ -196,8 +200,8 @@ async def on_message(message):
 async def close(ctx):
     """Closes a ticket and PMs the opener with the reason"""
     officer_names = "Galaxy Council"
-    unique_role_names = {"Ideas and Concerns": None, "Guild Bank Requests": "Guild Bank", "DKP Questions": None}
-    support_category_names = ["Ideas and Concerns", "Guild Bank Requests", "DKP Questions"]
+    unique_role_names = {"Ideas and Concerns": None, "Guild Bank Requests": "Guild Bank", "DKP Questions": None, "Frost Resistance": None}
+    support_category_names = ["Ideas and Concerns", "Guild Bank Requests", "DKP Questions", "Frost Resistance"]
     support_categories = [discordget(ctx.guild.categories, name=support_category_names[n])
                           for n in range(len(support_category_names))]
     ctx_category = discordget(ctx.guild.categories, id=ctx.channel.category_id)
@@ -227,12 +231,13 @@ async def close(ctx):
 @Bot.command()
 async def createticketmessage(ctx):
     """Creates the support message on which users react to open tickets"""
-    emojis = ['🆘', '🏦', '💰']
+    emojis = ['🆘', '🏦', '💰', '❄']
     support_channel_name = "support"
     ticket_message = f"This channel will be for support ticket creation, " \
                      f"react to the bot's message with a {emojis[1]} icon for guild bank requests, " \
                      f"{emojis[0]} to open a ticket with the council to discuss ideas/concerns, " \
-                     f"and {emojis[2]} for questions regarding DKP.\n\n" \
+                     f"{emojis[2]} for questions regarding DKP, " \
+                     f"and {emojis[3]} for a Frost Resistance request.\n\n" \
                      f"When creating a ticket, this opens a temporary channel " \
                      f"for which to submit your ideas/concerns/requests. " \
                      f"Once the need has been fulfilled, the channel will be removed."
@@ -246,7 +251,7 @@ async def createticketmessage(ctx):
 
 @Bot.command()
 async def roll(ctx, arg=100):
-    """Generates a random integer in the interval [1-N] where N (integer) is an optional input, default of 100."""
+    """Generates a random integer in the interval [1,N] where N (integer) is an optional input, default of 100."""
     await ctx.channel.send(f"{ctx.author.mention} has rolled a {random.randint(1, arg)} (1 - {arg})")
     await ctx.message.delete()
 
